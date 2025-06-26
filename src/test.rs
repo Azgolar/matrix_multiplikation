@@ -2,7 +2,8 @@
 mod tests {
     use rayon::ThreadPoolBuilder;
     use crate::matrix::zufallsmatrix_2d;
-    use core_affinity::{get_core_ids, CoreId};
+    use core_affinity::{get_core_ids, set_for_current, CoreId};
+    use std::process;
 
     use crate::algorithmen::crossbeam;
     use crate::algorithmen::manuell;
@@ -28,10 +29,20 @@ mod tests {
     fn testen() {
         // testen mit geraden und ungerade Matritzen
         let groessen: Vec<usize> = vec![4, 5, 12, 13, 30, 33, 68, 71, 126, 131, 256, 271, 300];
-        // testen mit geraden und ungeraden Anzahl von Threads
-        let threads: Vec<u32> = vec![4, 5];
 
         let kerne: Vec<CoreId> = get_core_ids().unwrap();
+
+        // Es soll mit einer geraden und ungeraden Anzahl an Threads getestet werden
+        let threads: Vec<usize>;
+        if kerne.len() >= 5 {
+            threads = vec![4,5];
+        }
+        else if kerne.len() >= 2 {
+            threads = vec![kerne.len()-1, kerne.len()];
+        }
+        else {
+            threads = vec![1];
+        }
 
         for thread in threads {
             println!("Testen von Threads = {}", thread);
@@ -47,10 +58,36 @@ mod tests {
                 single::ausführen(&a, &b, &mut c, n, &kerne[0]);
                 
                 let mut ergebnis: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
-                manuell::ausführen(&a, &b, &mut ergebnis, n, &kerne);
+                manuell::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
                 assert!(vergleich(&c, &ergebnis, n), "manuell.rs ist falsch für threads = {}, n = {}", thread, n);
 
+                // Bibliothek Crossbeam testen
                 ergebnis = vec![vec![0.0; n]; n];
+                crossbeam::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
+                assert!(vergleich(&c, &ergebnis, n), "crossbeam.rs ist falsch für threads = {}, n = {}", thread, n);
+
+                // Bibliothek Rayon testen
+                ergebnis = vec![vec![0.0; n]; n];
+                let kopie: Vec<CoreId> = kerne.clone();
+                let pool: rayon::ThreadPool = ThreadPoolBuilder::new().num_threads(thread)
+                    .start_handler(move |id| { set_for_current(kopie[id]); })
+                    .build().unwrap_or_else(|f| { 
+                        println!("Fehler beim erstellen des Threadpools: {}", f);
+                        process::exit(1)});
+                pool.install(|| { mein_rayon::ausführen(&a, &b, &mut ergebnis, n); });
+                assert!(vergleich(&c, &ergebnis, n), "rayon.rs ist falsch für threads = {}, n = {}", thread, n);
+
+                ergebnis = vec![vec![0.0; n]; n];
+                simd::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
+                assert!(vergleich(&c, &ergebnis, n), "simd.rs ist falsch für threads = {}, n = {}", thread, n);
+
+                ergebnis = vec![vec![0.0; n]; n];
+                tiling::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
+                assert!(vergleich(&c, &ergebnis, n), "tiling.rs ist falsch für threads = {}, n = {}", thread, n);
+
+                ergebnis = vec![vec![0.0; n]; n];
+                unroll::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
+                assert!(vergleich(&c, &ergebnis, n), "unroll.rs ist falsch für threads = {}, n = {}", thread, n);
             }
         }
         
