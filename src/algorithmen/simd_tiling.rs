@@ -42,20 +42,16 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
                         let mut zeile: Vec<f64> = vec![0.0; n];
 
                         // äußere Schleife über j-Blöcke um b[k][j] erneut zu benutzen
-                        for k_block in (0..n).step_by(block) {
-                            let k_max = (k_block + block).min(n); 
+                        for j_block in (0..n).step_by(block) {
+                            let j_max = (j_block + block).min(n); 
                             
                             // innere Schleife über k Blöcke
-                            for j_block in (0..n).step_by(block) {
-                                let j_max = (j_block + block).min(n);
+                            for k_block in (0..n).step_by(block) {
+                                let k_max = (k_block + block).min(n);
 
                                 for k in k_block..k_max {
-
-                                    // ändert sich in Schleife j nicht
-                                    let optimiert = a[i][k];
-                                    
                                     for j in j_block..j_max {
-                                        zeile[j] = zeile[j] + optimiert * b[k][j];
+                                        zeile[j] = zeile[j] + a[i][k] * b[k][j];
                                     }
                                 } 
                             }

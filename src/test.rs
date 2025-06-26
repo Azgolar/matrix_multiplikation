@@ -10,6 +10,7 @@ mod tests {
     use crate::algorithmen::manuell_unsicher;
     use crate::algorithmen::rayon as mein_rayon;
     use crate::algorithmen::simd;
+    use crate::algorithmen::simd_tiling;
     use crate::algorithmen::single;
     use crate::algorithmen::tiling;
     use crate::algorithmen::unroll;
@@ -45,10 +46,12 @@ mod tests {
             threads = vec![1];
         }
 
+        let mut i: u32 = 1;
         for thread in threads {
             println!("Testen von Threads = {}", thread);
             for &n in &groessen {
-                println!("n = {}", n);
+                println!("Test {}/{}", i, groessen.len());
+                i = i + 1;
 
                 // Matrizen initialisieren
                 let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
@@ -91,9 +94,14 @@ mod tests {
                 assert!(vergleich(&c, &ergebnis, n), "tiling.rs ist falsch für threads = {}, n = {}", thread, n);
 
                 ergebnis = vec![vec![0.0; n]; n];
+                simd_tiling::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
+                assert!(vergleich(&c, &ergebnis, n), "simd_tiling.rs ist falsch für threads = {}, n = {}", thread, n);
+
+                ergebnis = vec![vec![0.0; n]; n];
                 unroll::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
                 assert!(vergleich(&c, &ergebnis, n), "unroll.rs ist falsch für threads = {}, n = {}", thread, n);
             }
+            i = 1;
         }
         
         println!("\nAlle Funktionen sind korrekt");

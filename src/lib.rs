@@ -10,6 +10,7 @@ pub mod algorithmen {
     pub mod unroll;
     pub mod tiling;
     pub mod simd;
+    pub mod simd_tiling;
     pub mod rayon;
     pub mod crossbeam;
 }
