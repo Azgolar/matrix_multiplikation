@@ -5,7 +5,8 @@ pub mod test;
 
 pub mod algorithmen {
     pub mod single;
-    pub mod manuell;
+    pub mod manuell_sicher;
+    pub mod manuell_unsicher;
     pub mod unroll;
     pub mod tiling;
     pub mod simd;

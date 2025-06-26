@@ -6,7 +6,8 @@ mod tests {
     use std::process;
 
     use crate::algorithmen::crossbeam;
-    use crate::algorithmen::manuell;
+    use crate::algorithmen::manuell_sicher;
+    use crate::algorithmen::manuell_unsicher;
     use crate::algorithmen::rayon as mein_rayon;
     use crate::algorithmen::simd;
     use crate::algorithmen::single;
@@ -58,8 +59,12 @@ mod tests {
                 single::ausführen(&a, &b, &mut c, n, &kerne[0]);
                 
                 let mut ergebnis: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
-                manuell::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
-                assert!(vergleich(&c, &ergebnis, n), "manuell.rs ist falsch für threads = {}, n = {}", thread, n);
+                manuell_sicher::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
+                assert!(vergleich(&c, &ergebnis, n), "manuell_sicher.rs ist falsch für threads = {}, n = {}", thread, n);
+            
+                let mut ergebnis: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
+                manuell_unsicher::ausführen(&a, &b, &mut ergebnis, n, thread, &kerne);
+                assert!(vergleich(&c, &ergebnis, n), "manuell_unsicher.rs ist falsch für threads = {}, n = {}", thread, n);
 
                 // Bibliothek Crossbeam testen
                 ergebnis = vec![vec![0.0; n]; n];
