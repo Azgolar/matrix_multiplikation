@@ -1,6 +1,7 @@
 #![feature(portable_simd)]
 
 pub mod matrix;
+pub mod test;
 
 pub mod algorithmen {
     pub mod single;
