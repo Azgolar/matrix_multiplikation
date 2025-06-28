@@ -1,6 +1,9 @@
 use std::{thread, sync::atomic::{AtomicUsize, Ordering}};
 use core_affinity::{set_for_current, CoreId};
 
+/*
+    dynamische Arbeitsverteilung mit Rust Threads. Es wird loop unrolling verwendet
+*/
 pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
 
     // jeder Thread darf sich jedesmal 4 Zeilen nehmen

@@ -29,7 +29,7 @@ mod tests {
 
     #[test]
     fn testen() {
-        // testen mit geraden und ungerade Matritzen
+        // testen mit geraden und ungerade Matritzen 
         let groessen: Vec<usize> = vec![4, 5, 12, 13, 30, 33, 68, 71, 126, 131, 256, 271, 300];
 
         let kerne: Vec<CoreId> = get_core_ids().unwrap();
@@ -40,7 +40,7 @@ mod tests {
             threads = vec![4,5];
         }
         else if kerne.len() >= 2 {
-            threads = vec![kerne.len()-1, kerne.len()];
+            threads = vec![kerne.len() - 1, kerne.len()];
         }
         else {
             threads = vec![1];

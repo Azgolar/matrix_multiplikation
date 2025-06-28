@@ -2,10 +2,10 @@ use std::{thread, simd::f64x4, sync::atomic::{AtomicUsize, Ordering}};
 use core_affinity::{set_for_current, CoreId};
 
 /*
-    nutzt Simd 
+    dynamische Arbeitsverteilung mit Rust Threads. Es wurde die Instruktion simd verwendet.
+
     Zum testen wurde ein i7-14700k verwendet. Der Prozessor hat eine AVX2 Registerbreite von 256 bit (= 4 * 64 bit)
 */
-
 pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
 
     // jeder Thread darf sich jedesmal 4 Zeilen nehmen
