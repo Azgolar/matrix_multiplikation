@@ -4,13 +4,13 @@ pub mod matrix;
 pub mod test;
 
 pub mod algorithmen {
-    pub mod single;
+    pub mod crossbeam;
     pub mod manuell_sicher;
     pub mod manuell_unsicher;
-    pub mod unroll;
-    pub mod tiling;
+    pub mod rayon;
     pub mod simd;
     pub mod simd_tiling;
-    pub mod rayon;
-    pub mod crossbeam;
+    pub mod single;
+    pub mod tiling;
+    pub mod unroll;
 }

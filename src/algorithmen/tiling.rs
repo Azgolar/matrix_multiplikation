@@ -1,11 +1,20 @@
-use std::{thread, sync::atomic::{AtomicUsize, Ordering}};
-use core_affinity::{set_for_current, CoreId};
+use core_affinity::{CoreId, set_for_current};
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    thread,
+};
 
 /*
     dynamische Arbeitsverteilung mit Rust Threads. Es wird Block Tiling verwendet
 */
-pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
-
+pub fn ausführen(
+    a: &Vec<Vec<f64>>,
+    b: &Vec<Vec<f64>>,
+    c: &mut Vec<Vec<f64>>,
+    n: usize,
+    threads: usize,
+    pinnen: &Vec<CoreId>,
+) {
     // jeder Thread darf sich jedesmal 4 Zeilen nehmen
     let zeilen: usize = 4;
 
@@ -14,10 +23,11 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
 
     // atomarer Zähler für die dynamische Arbeitsverteilung mit Startwert null (= nächste zu verarbeitende Zeile)
     let zähler: AtomicUsize = AtomicUsize::new(0);
-    
+
     thread::scope(|s| {
         // Thread Handles fürs joinen sammeln
-        let mut sammeln: Vec<thread::ScopedJoinHandle<'_, Vec<(usize, Vec<f64>)>>>= Vec::with_capacity(threads);
+        let mut sammeln: Vec<thread::ScopedJoinHandle<'_, Vec<(usize, Vec<f64>)>>> =
+            Vec::with_capacity(threads);
 
         for z in 0..threads {
             let kern: CoreId = pinnen[z];
@@ -46,21 +56,20 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
 
                         // äußere Schleife über j-Blöcke um b[k][j] erneut zu benutzen
                         for k_block in (0..n).step_by(block) {
-                            let k_max = (k_block + block).min(n); 
-                            
+                            let k_max = (k_block + block).min(n);
+
                             // innere Schleife über k Blöcke
                             for j_block in (0..n).step_by(block) {
                                 let j_max = (j_block + block).min(n);
 
                                 for k in k_block..k_max {
-
                                     // ändert sich in Schleife j nicht
                                     let optimiert = a[i][k];
-                                    
+
                                     for j in j_block..j_max {
                                         zeile[j] = zeile[j] + optimiert * b[k][j];
                                     }
-                                } 
+                                }
                             }
                         }
                         berechnet.push((i, zeile));
@@ -77,7 +86,7 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
             let rückgabe: Vec<(usize, Vec<f64>)> = h.join().unwrap();
             for (i, zeile) in rückgabe {
                 c[i] = zeile;
-            } 
+            }
         }
     });
 }

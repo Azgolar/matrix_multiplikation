@@ -1,15 +1,20 @@
-
-use crossbeam::{thread, channel::unbounded};
-use core_affinity::{set_for_current, CoreId};
+use core_affinity::{CoreId, set_for_current};
+use crossbeam::{channel::unbounded, thread};
 
 /*
-    dynamische Arbeitsverteilung mit Crossbeam Channels 
+    dynamische Arbeitsverteilung mit Crossbeam Channels
     --> Threads holen sich selbständig Zeilenabschnitte aus einer globalen Warteschlange
 */
-pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
-
+pub fn ausführen(
+    a: &Vec<Vec<f64>>,
+    b: &Vec<Vec<f64>>,
+    c: &mut Vec<Vec<f64>>,
+    n: usize,
+    threads: usize,
+    pinnen: &Vec<CoreId>,
+) {
     // jeder Thread darf sich jedesmal 4 Zeilen nehmen
-    let zeilen: usize  = 4;
+    let zeilen: usize = 4;
 
     // Sender und Empfänger als unbounded erstellen da die Anzahl der Zeilen in der Warteschlange unbekannt ist
     let (sender, empfänger) = unbounded::<usize>();
@@ -26,7 +31,7 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
     thread::scope(|s| {
         // Alle Thread handles speichern
         let mut sammeln = Vec::with_capacity(threads);
-        
+
         // Worker Threads erstellen
         for z in 0..threads {
             let kern: CoreId = pinnen[z];
@@ -42,11 +47,11 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
                 let mut berechnet: Vec<(usize, Vec<f64>)> = Vec::new();
 
                 // Matrixmultiplikation durchführen solange bis alle Zeilen berechnet wurden
-                for anfang in empfänger_kopie {    
-                    // Ende des aktuellen Zeilenbereichs berechnen 
-                    let ende: usize = (anfang + zeilen).min(n); 
+                for anfang in empfänger_kopie {
+                    // Ende des aktuellen Zeilenbereichs berechnen
+                    let ende: usize = (anfang + zeilen).min(n);
 
-                    for i in anfang..ende {  
+                    for i in anfang..ende {
                         let mut ergebnis: Vec<f64> = vec![0.0; n];
 
                         for j in 0..n {
@@ -62,7 +67,7 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
                     }
                 }
                 // Rückgabe
-                berechnet 
+                berechnet
             });
             sammeln.push(handle);
         }
@@ -76,5 +81,6 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
                 c[i] = zeile;
             }
         }
-    }).unwrap();
+    })
+    .unwrap();
 }

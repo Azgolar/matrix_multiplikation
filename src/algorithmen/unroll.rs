@@ -1,11 +1,20 @@
-use std::{thread, sync::atomic::{AtomicUsize, Ordering}};
-use core_affinity::{set_for_current, CoreId};
+use core_affinity::{CoreId, set_for_current};
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    thread,
+};
 
 /*
     dynamische Arbeitsverteilung mit Rust Threads. Es wird loop unrolling verwendet
 */
-pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
-
+pub fn ausführen(
+    a: &Vec<Vec<f64>>,
+    b: &Vec<Vec<f64>>,
+    c: &mut Vec<Vec<f64>>,
+    n: usize,
+    threads: usize,
+    pinnen: &Vec<CoreId>,
+) {
     // jeder Thread darf sich jedesmal 4 Zeilen nehmen
     let zeilen: usize = 4;
 
@@ -14,10 +23,11 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
 
     // atomarer Zähler für die dynamische Arbeitsverteilung mit Startwert null (= nächste zu verarbeitende Zeile)
     let zähler: AtomicUsize = AtomicUsize::new(0);
-    
+
     thread::scope(|s| {
         // Thread Handles fürs joinen sammeln
-        let mut sammeln: Vec<thread::ScopedJoinHandle<'_, Vec<(usize, Vec<f64>)>>>= Vec::with_capacity(threads);
+        let mut sammeln: Vec<thread::ScopedJoinHandle<'_, Vec<(usize, Vec<f64>)>>> =
+            Vec::with_capacity(threads);
 
         for z in 0..threads {
             let kern: CoreId = pinnen[z];
@@ -50,8 +60,11 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
                         for j in 0..n {
                             let mut summe: f64 = 0.0;
                             for k in (0..grenze).step_by(faktor) {
-                                summe = summe + a[i][k] * b[k][j] + a[i][k + 1] *  b[k + 1][j] + 
-                                    a[i][k + 2] *  b[k + 2][j] + a[i][k + 3] *  b[k + 3][j];
+                                summe = summe
+                                    + a[i][k] * b[k][j]
+                                    + a[i][k + 1] * b[k + 1][j]
+                                    + a[i][k + 2] * b[k + 2][j]
+                                    + a[i][k + 3] * b[k + 3][j];
                             }
 
                             // restliche Zeilen
@@ -75,7 +88,7 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
             let rückgabe: Vec<(usize, Vec<f64>)> = h.join().unwrap();
             for (i, zeile) in rückgabe {
                 c[i] = zeile;
-            } 
+            }
         }
     });
 }

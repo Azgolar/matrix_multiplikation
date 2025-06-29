@@ -1,22 +1,33 @@
-use std::{thread, simd::f64x4, sync::atomic::{AtomicUsize, Ordering}};
-use core_affinity::{set_for_current, CoreId};
+use core_affinity::{CoreId, set_for_current};
+use std::{
+    simd::f64x4,
+    sync::atomic::{AtomicUsize, Ordering},
+    thread,
+};
 
 /*
     dynamische Arbeitsverteilung mit Rust Threads. Es wurde die Instruktion simd verwendet.
 
     Zum testen wurde ein i7-14700k verwendet. Der Prozessor hat eine AVX2 Registerbreite von 256 bit (= 4 * 64 bit)
 */
-pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
-
+pub fn ausführen(
+    a: &Vec<Vec<f64>>,
+    b: &Vec<Vec<f64>>,
+    c: &mut Vec<Vec<f64>>,
+    n: usize,
+    threads: usize,
+    pinnen: &Vec<CoreId>,
+) {
     // jeder Thread darf sich jedesmal 4 Zeilen nehmen
     let zeilen: usize = 4;
 
     // atomarer Zähler für die dynamische Arbeitsverteilung mit Startwert null (= nächste zu verarbeitende Zeile)
     let zähler: AtomicUsize = AtomicUsize::new(0);
-    
+
     thread::scope(|s| {
         // Thread Handles fürs joinen sammeln
-        let mut sammeln: Vec<thread::ScopedJoinHandle<'_, Vec<(usize, Vec<f64>)>>>= Vec::with_capacity(threads);
+        let mut sammeln: Vec<thread::ScopedJoinHandle<'_, Vec<(usize, Vec<f64>)>>> =
+            Vec::with_capacity(threads);
 
         for z in 0..threads {
             let kern: CoreId = pinnen[z];
@@ -46,13 +57,17 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
                         let mut zeile: Vec<f64> = vec![0.0; n];
 
                         for j in (0..rest).step_by(4) {
-                            let mut summe:std::simd::Simd<f64, 4> = f64x4::splat(0.0);
+                            let mut summe: std::simd::Simd<f64, 4> = f64x4::splat(0.0);
                             for k in 0..n {
                                 let teil1: std::simd::Simd<f64, 4> = f64x4::splat(a[i][k]);
 
-                                let teil2: std::simd::Simd<f64, 4> = f64x4::from_array([b[k][j], b[k][j + 1], 
-                                    b[k][j + 2], b[k][j + 3]]);
-                                    summe = summe + teil1 * teil2;
+                                let teil2: std::simd::Simd<f64, 4> = f64x4::from_array([
+                                    b[k][j],
+                                    b[k][j + 1],
+                                    b[k][j + 2],
+                                    b[k][j + 3],
+                                ]);
+                                summe = summe + teil1 * teil2;
                             }
 
                             // Ergebnisse speichern
@@ -60,7 +75,6 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
                             for l in 0..4 {
                                 zeile[j + l] = zwischen[l];
                             }
-                    
                         }
 
                         // restliche Spalten einzelen berechnen
@@ -85,7 +99,7 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
             let rückgabe: Vec<(usize, Vec<f64>)> = h.join().unwrap();
             for (i, zeile) in rückgabe {
                 c[i] = zeile;
-            } 
+            }
         }
     });
 }

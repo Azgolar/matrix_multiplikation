@@ -1,20 +1,30 @@
-use std::{thread, sync::atomic::{AtomicUsize, Ordering}};
-use core_affinity::{set_for_current, CoreId};
+use core_affinity::{CoreId, set_for_current};
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    thread,
+};
 
 /*
     dynamische Arbeitsverteilung mit Rust Threads. In dieser Variante wurde kein unsafe benutzt
 */
-pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
-
+pub fn ausführen(
+    a: &Vec<Vec<f64>>,
+    b: &Vec<Vec<f64>>,
+    c: &mut Vec<Vec<f64>>,
+    n: usize,
+    threads: usize,
+    pinnen: &Vec<CoreId>,
+) {
     // jeder Thread darf sich jedesmal 4 Zeilen nehmen
     let zeilen: usize = 4;
 
     // atomarer Zähler für die dynamische Arbeitsverteilung mit Startwert null (= nächste zu verarbeitende Zeile)
     let zähler: AtomicUsize = AtomicUsize::new(0);
-    
+
     thread::scope(|s| {
         // Thread Handles fürs joinen sammeln
-        let mut sammeln: Vec<thread::ScopedJoinHandle<'_, Vec<(usize, Vec<f64>)>>>= Vec::with_capacity(threads);
+        let mut sammeln: Vec<thread::ScopedJoinHandle<'_, Vec<(usize, Vec<f64>)>>> =
+            Vec::with_capacity(threads);
 
         for z in 0..threads {
             let kern: CoreId = pinnen[z];
@@ -62,7 +72,7 @@ pub fn ausführen(a: &Vec<Vec<f64>>, b: &Vec<Vec<f64>>, c: &mut Vec<Vec<f64>>, n
             let rückgabe: Vec<(usize, Vec<f64>)> = h.join().unwrap();
             for (i, zeile) in rückgabe {
                 c[i] = zeile;
-            } 
+            }
         }
     });
 }
