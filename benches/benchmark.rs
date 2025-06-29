@@ -61,7 +61,7 @@ pub fn run_single(einstellungen: &mut Criterion) {
     Threads ohne unsafe
 */
 pub fn run_manuell_sicher(einstellungen: &mut Criterion) {
-    let mut gruppe: criterion::BenchmarkGroup<'_, criterion::measurement::WallTime> = einstellungen.benchmark_group("Threasd ohne unsafe");
+    let mut gruppe: criterion::BenchmarkGroup<'_, criterion::measurement::WallTime> = einstellungen.benchmark_group("Threads ohne unsafe");
     
     // Benchmark Einstellungen
     gruppe.sample_size(ANZAHL);
@@ -71,11 +71,11 @@ pub fn run_manuell_sicher(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::from_parameter("Threads ohne unsafe"), &n, |messen, &n| {
-                // Matrizen initialisieren
-                let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-                let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+    
+        for threads in 2..=kerne.len() {
+            gruppe.bench_with_input(BenchmarkId::new("Threads ohne unsafe", format!("{}_threads", threads)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -104,11 +104,11 @@ pub fn run_manuell_unsicher(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::from_parameter("Threads mit unsafe"), &n, |messen, &n| {
-                // Matrizen initialisieren
-                let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-                let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+
+        for threads in 2..=kerne.len() {
+            gruppe.bench_with_input(BenchmarkId::new("Threads mit unsafe", format!("{}_threads", threads)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -137,11 +137,11 @@ pub fn run_unroll(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::from_parameter("loop unrolling"), &n, |messen, &n| {
-                // Matrizen initialisieren
-                let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-                let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+
+        for threads in 2..=kerne.len() {
+            gruppe.bench_with_input(BenchmarkId::new("loop unrolling", format!("{}_threads", threads)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -167,11 +167,11 @@ pub fn run_tiling(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::from_parameter("block tiling"), &n, |messen, &n| {
-                // Matrizen initialisieren
-                let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-                let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+
+        for threads in 2..=kerne.len() {
+            gruppe.bench_with_input(BenchmarkId::new("block tiling", format!("{}_threads", threads)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -197,11 +197,11 @@ pub fn run_simd(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::from_parameter("simd"), &n, |messen, &n| {
-                // Matrizen initialisieren
-                let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-                let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+
+        for threads in 2..=kerne.len() {
+            gruppe.bench_with_input(BenchmarkId::new("simd", format!("{}_threads", threads)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -227,11 +227,11 @@ pub fn run_simd_tiling(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::from_parameter("block tiling und simd"), &n, |messen, &n| {
-                // Matrizen initialisieren
-                let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-                let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        for threads in 2..=kerne.len() {
+            let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+            let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+
+            gruppe.bench_with_input(BenchmarkId::new("block tiling und simd", format!("{}_threads", threads)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -258,7 +258,10 @@ pub fn run_rayon(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..kerne.len() {
+        let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+
+        for threads in 2..=kerne.len() {
 
             // Kopie für jeden Thread
             let kerne_kopie: Vec<core_affinity::CoreId> = kerne.clone();
@@ -270,10 +273,7 @@ pub fn run_rayon(einstellungen: &mut Criterion) {
                         println!("Fehler beim erstellen des Threadpools: {}", f);
                         process::exit(1);});
 
-            gruppe.bench_with_input(BenchmarkId::from_parameter("Rayon"), &n, |messen, &n| {
-                // Matrizen initialisieren
-                let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-                let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+            gruppe.bench_with_input(BenchmarkId::new("Rayon", format!("{}_threads", threads)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -299,11 +299,11 @@ pub fn run_crossbeam(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::from_parameter("Crossbeam"), &n, |messen, &n| {
-                // Matrizen initialisieren
-                let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-                let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+
+        for threads in 2..=kerne.len() {
+            gruppe.bench_with_input(BenchmarkId::new("Crossbeam", format!("{}_threads", threads)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
