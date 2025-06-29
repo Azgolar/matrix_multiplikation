@@ -75,7 +75,7 @@ pub fn run_manuell_sicher(einstellungen: &mut Criterion) {
         let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
     
         for threads in 2..=kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::new("Threads ohne unsafe", format!("{}_threads", threads)), &n, |messen, &n| {
+            gruppe.bench_with_input(BenchmarkId::new("ohne_unsafe", format!("{}_{}", threads, n)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -108,7 +108,7 @@ pub fn run_manuell_unsicher(einstellungen: &mut Criterion) {
         let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
 
         for threads in 2..=kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::new("Threads mit unsafe", format!("{}_threads", threads)), &n, |messen, &n| {
+            gruppe.bench_with_input(BenchmarkId::new("mit_unsafe",format!("{}_{}", threads, n)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -141,7 +141,7 @@ pub fn run_unroll(einstellungen: &mut Criterion) {
         let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
 
         for threads in 2..=kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::new("loop unrolling", format!("{}_threads", threads)), &n, |messen, &n| {
+            gruppe.bench_with_input(BenchmarkId::new("unrolling", format!("{}_{}", threads, n)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -171,7 +171,7 @@ pub fn run_tiling(einstellungen: &mut Criterion) {
         let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
 
         for threads in 2..=kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::new("block tiling", format!("{}_threads", threads)), &n, |messen, &n| {
+            gruppe.bench_with_input(BenchmarkId::new("tiling", format!("{}_{}", threads, n)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -201,7 +201,7 @@ pub fn run_simd(einstellungen: &mut Criterion) {
         let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
 
         for threads in 2..=kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::new("simd", format!("{}_threads", threads)), &n, |messen, &n| {
+            gruppe.bench_with_input(BenchmarkId::new("simd", format!("{}_{}", threads, n)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -227,11 +227,12 @@ pub fn run_simd_tiling(einstellungen: &mut Criterion) {
     let kerne: Vec<core_affinity::CoreId> = get_core_ids().unwrap();
 
     for &n in MATRIZEN {
-        for threads in 2..=kerne.len() {
-            let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
-            let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let a: Vec<Vec<f64>> = zufallsmatrix_2d(n);
+        let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
 
-            gruppe.bench_with_input(BenchmarkId::new("block tiling und simd", format!("{}_threads", threads)), &n, |messen, &n| {
+        for threads in 2..=kerne.len() {
+
+            gruppe.bench_with_input(BenchmarkId::new("simd_tiling", format!("{}_{}", threads, n)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -273,7 +274,7 @@ pub fn run_rayon(einstellungen: &mut Criterion) {
                         println!("Fehler beim erstellen des Threadpools: {}", f);
                         process::exit(1);});
 
-            gruppe.bench_with_input(BenchmarkId::new("Rayon", format!("{}_threads", threads)), &n, |messen, &n| {
+            gruppe.bench_with_input(BenchmarkId::new("Rayon", format!("{}_{}", threads, n)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
@@ -303,7 +304,7 @@ pub fn run_crossbeam(einstellungen: &mut Criterion) {
         let b: Vec<Vec<f64>> = zufallsmatrix_2d(n);
 
         for threads in 2..=kerne.len() {
-            gruppe.bench_with_input(BenchmarkId::new("Crossbeam", format!("{}_threads", threads)), &n, |messen, &n| {
+            gruppe.bench_with_input(BenchmarkId::new("Crossbeam", format!("{}_{}", threads, n)), &n, |messen, &n| {
                 let mut c: Vec<Vec<f64>> = vec![vec![0.0; n]; n];
 
                 // Benchmark ausführen
